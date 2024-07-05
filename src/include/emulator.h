@@ -3,12 +3,13 @@
 #define EMULATOR_H_ 1
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define MEM_SZ 0x1000
 
 typedef struct EmulatorCtx {
     /* Memory, array of MEM_SZ bytes */
-    void* mem;
+    uint8_t* mem;
 
     /*
      * General purpose registers.
@@ -38,11 +39,22 @@ typedef struct EmulatorCtx {
 /* Initialize a emulator context structure */
 void emulator_init(EmulatorCtx* ctx);
 
-/* Free an emulator context structure recursively */
+/* Free the necessary members of an emulator context structure. Doesn't free the
+ * context structure itself. */
 void emulator_free(EmulatorCtx* ctx);
+
+/* Load a ROM file into memory, at the current Program Counter (PC) address */
+void emulator_load_rom(EmulatorCtx* ctx, const char* rom_filename);
 
 /* Push and pop values from the stack of the emulator */
 void stack_push(EmulatorCtx* ctx, uint16_t val);
 uint16_t stack_pop(EmulatorCtx* ctx);
+
+/* Parse current instruction, and increment the Program Counter if needed */
+void emulator_tick(EmulatorCtx* ctx);
+
+/* Parse and execute the instruction with the specified opcode.
+ * TODO: Rename to `execute_instruction'. */
+void parse_instruction(EmulatorCtx* ctx, uint16_t opcode);
 
 #endif /* EMULATOR_H_ */

@@ -9,6 +9,10 @@
 
 /*----------------------------------------------------------------------------*/
 
+/* Print error message to stderr, call all the relevant SDL functions, and exit
+ * the program. */
+void die(const char* fmt, ...);
+
 /* Print error message to stderr, along with the function name */
 void err_msg(const char* func, const char* fmt, ...);
 

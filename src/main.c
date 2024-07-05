@@ -2,49 +2,31 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include <SDL2/SDL.h>
 
+#include "include/util.h"
+#include "include/main.h"
 #include "include/display.h"
 #include "include/emulator.h"
+#include "include/keyboard.h"
 
 /*----------------------------------------------------------------------------*/
 /* Globals */
 
-static SDL_Window* g_window     = NULL;
-static SDL_Renderer* g_renderer = NULL;
-
-/*----------------------------------------------------------------------------*/
-/* Misc helper functions */
-
-static void die(const char* fmt, ...) {
-    va_list va;
-    va_start(va, fmt);
-
-    vfprintf(stderr, fmt, va);
-    putc('\n', stderr);
-
-    if (g_window != NULL)
-        SDL_DestroyWindow(g_window);
-
-    SDL_Quit();
-    exit(1);
-}
-
-/*----------------------------------------------------------------------------*/
-/* SDL helper functions */
-
-static inline void set_render_color(SDL_Renderer* rend, uint32_t col) {
-    const uint8_t r = (col >> 16) & 0xFF;
-    const uint8_t g = (col >> 8) & 0xFF;
-    const uint8_t b = (col >> 0) & 0xFF;
-    const uint8_t a = 255;
-    SDL_SetRenderDrawColor(rend, r, g, b, a);
-}
+SDL_Window* g_window     = NULL;
+SDL_Renderer* g_renderer = NULL;
 
 /*----------------------------------------------------------------------------*/
 /* Main function */
 
-int main(void) {
+int main(int argc, char** argv) {
+    if (argc < 2)
+        die("Usage: %s <rom>\n", argv[0]);
+
+    const char* rom_filename = argv[1];
+
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0)
         die("Unable to start SDL.");
 
@@ -64,7 +46,15 @@ int main(void) {
         die("Error creating SDL renderer.");
     }
 
-    /* TODO: Initialize the emulator */
+    /* Initialize the random seed for RND instruction */
+    srand(time(NULL));
+
+    /* Initialize the emulator */
+    EmulatorCtx ctx;
+    emulator_init(&ctx);
+
+    /* Load the ROM file to memory */
+    emulator_load_rom(&ctx, rom_filename);
 
     /* Initialize the display */
     display_clear();
@@ -82,11 +72,55 @@ int main(void) {
 
                 case SDL_KEYDOWN: {
                     switch (event.key.keysym.scancode) {
-                        case SDL_SCANCODE_ESCAPE:
-                        case SDL_SCANCODE_Q: {
+                        case SDL_SCANCODE_ESCAPE: {
                             running = false;
                         } break;
 
+                        /* clang-format off */
+                        case SDL_SCANCODE_1: kb_store(0x1, true); break;
+                        case SDL_SCANCODE_2: kb_store(0x2, true); break;
+                        case SDL_SCANCODE_3: kb_store(0x3, true); break;
+                        case SDL_SCANCODE_4: kb_store(0xC, true); break;
+                        case SDL_SCANCODE_Q: kb_store(0x4, true); break;
+                        case SDL_SCANCODE_W: kb_store(0x5, true); break;
+                        case SDL_SCANCODE_E: kb_store(0x6, true); break;
+                        case SDL_SCANCODE_R: kb_store(0xD, true); break;
+                        case SDL_SCANCODE_A: kb_store(0x7, true); break;
+                        case SDL_SCANCODE_S: kb_store(0x8, true); break;
+                        case SDL_SCANCODE_D: kb_store(0x9, true); break;
+                        case SDL_SCANCODE_F: kb_store(0xE, true); break;
+                        case SDL_SCANCODE_Z: kb_store(0xA, true); break;
+                        case SDL_SCANCODE_X: kb_store(0x0, true); break;
+                        case SDL_SCANCODE_C: kb_store(0xB, true); break;
+                        case SDL_SCANCODE_V: kb_store(0xF, true); break;
+
+                        /* clang-format on */
+                        default:
+                            break;
+                    }
+                } break;
+
+                case SDL_KEYUP: {
+                    switch (event.key.keysym.scancode) {
+                        /* clang-format off */
+                        case SDL_SCANCODE_1: kb_store(0x1, false); break;
+                        case SDL_SCANCODE_2: kb_store(0x2, false); break;
+                        case SDL_SCANCODE_3: kb_store(0x3, false); break;
+                        case SDL_SCANCODE_4: kb_store(0xC, false); break;
+                        case SDL_SCANCODE_Q: kb_store(0x4, false); break;
+                        case SDL_SCANCODE_W: kb_store(0x5, false); break;
+                        case SDL_SCANCODE_E: kb_store(0x6, false); break;
+                        case SDL_SCANCODE_R: kb_store(0xD, false); break;
+                        case SDL_SCANCODE_A: kb_store(0x7, false); break;
+                        case SDL_SCANCODE_S: kb_store(0x8, false); break;
+                        case SDL_SCANCODE_D: kb_store(0x9, false); break;
+                        case SDL_SCANCODE_F: kb_store(0xE, false); break;
+                        case SDL_SCANCODE_Z: kb_store(0xA, false); break;
+                        case SDL_SCANCODE_X: kb_store(0x0, false); break;
+                        case SDL_SCANCODE_C: kb_store(0xB, false); break;
+                        case SDL_SCANCODE_V: kb_store(0xF, false); break;
+
+                        /* clang-format on */
                         default:
                             break;
                     }
@@ -101,12 +135,18 @@ int main(void) {
         set_render_color(g_renderer, 0x000000);
         SDL_RenderClear(g_renderer);
 
-        /* TODO */
+        /* Render and CPU frequency is the same, 60Hz */
+        emulator_tick(&ctx);
+
+        /* Render the virtual display into the SDL window */
+        display_render();
 
         /* Send to renderer and delay depending on FPS */
         SDL_RenderPresent(g_renderer);
         SDL_Delay(1000 / FPS);
     }
+
+    emulator_free(&ctx);
 
     SDL_DestroyRenderer(g_renderer);
     SDL_DestroyWindow(g_window);

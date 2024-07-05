@@ -1,14 +1,35 @@
 
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 
-#include "include/emulator.h"
-#include "include/display.h"
 #include "include/util.h"
+#include "include/emulator.h"
+#include "include/keyboard.h"
+#include "include/display.h"
+
+/* Emulated address where the digits start */
+#define DIGITS_ADDR 0x10
+
+/* Height (number of bytes) of each character sprite */
+#define CHAR_SPRITE_H 5
+
+#define DO_STEP   true
+#define DONT_STEP false
 
 void emulator_init(EmulatorCtx* ctx) {
     /* Allocate emulated memory */
-    ctx->mem = malloc(MEM_SZ);
+    ctx->mem = calloc(MEM_SZ, sizeof(uint8_t));
+
+    /* Store the digit sprites in the "interpreter" memory region */
+    memcpy(&ctx->mem[DIGITS_ADDR],
+           "\xF0\x90\x90\x90\xF0\x20\x60\x20\x20\x70\xF0\x10\xF0\x80\xF0\xF0"
+           "\x10\xF0\x10\xF0\x90\x90\xF0\x10\x10\xF0\x80\xF0\x10\xF0\xF0\x80"
+           "\xF0\x90\xF0\xF0\x10\x20\x40\x40\xF0\x90\xF0\x90\xF0\xF0\x90\xF0"
+           "\x10\xF0\xF0\x90\xF0\x90\x90\xE0\x90\xE0\x90\xE0\xF0\x80\x80\x80"
+           "\xF0\xE0\x90\x90\x90\xE0\xF0\x80\xF0\x80\xF0\xF0\x80\xF0\x80\x80",
+           16 * CHAR_SPRITE_H);
 
     /* Clear general purpose registers */
     for (size_t i = 0; i < LENGTH(ctx->V); i++)
@@ -17,8 +38,8 @@ void emulator_init(EmulatorCtx* ctx) {
     /* Clear I register, and delay and sound timers */
     ctx->I = ctx->DT = ctx->ST = 0;
 
-    /* TODO: Initialize the program counter */
-    ctx->PC = 0;
+    /* Initialize the program counter to where the programs are loaded */
+    ctx->PC = 0x200;
 
     /* Initialize the stack pointer, pointing to the bottom of the stack */
     ctx->SP = 0;
@@ -30,7 +51,18 @@ void emulator_init(EmulatorCtx* ctx) {
 
 void emulator_free(EmulatorCtx* ctx) {
     free(ctx->mem);
-    free(ctx);
+}
+
+/*----------------------------------------------------------------------------*/
+
+void emulator_load_rom(EmulatorCtx* ctx, const char* rom_filename) {
+    FILE* fp = fopen(rom_filename, "rb");
+    if (!fp)
+        die("Failed to open file: '%s'\n", rom_filename);
+
+    char read_byte;
+    for (int i = ctx->PC; (read_byte = fgetc(fp)) != EOF; i++)
+        ctx->mem[i] = read_byte;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -55,6 +87,20 @@ uint16_t stack_pop(EmulatorCtx* ctx) {
 
 /*----------------------------------------------------------------------------*/
 
+void emulator_tick(EmulatorCtx* ctx) {
+    /* Read next two bytes at the Program Counter. CHIP-8 is always
+     * big-endian. */
+    uint16_t current_opcode;
+    current_opcode = ctx->mem[ctx->PC] << 8;
+    current_opcode |= ctx->mem[ctx->PC + 1];
+
+    /* Increment the Program Counter before executing the instruction itself */
+    ctx->PC += 2;
+
+    /* Parse and execute the instruction */
+    parse_instruction(ctx, current_opcode);
+}
+
 void parse_instruction(EmulatorCtx* ctx, uint16_t opcode) {
     /* Groups of 8 bits, from left to right */
     const uint8_t byte1 = (opcode >> 8) & 0xFF;
@@ -68,7 +114,27 @@ void parse_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
     /* First 4 bits of the opcode */
     switch (nibble1) {
-        case 0:   /* SYS addr */
+        case 0: {
+            switch (byte2) {
+                /* CLS */
+                case 0xE0: {
+                    display_clear();
+                    return;
+                }
+
+                /* RET */
+                case 0xEE: {
+                    ctx->PC = stack_pop(ctx);
+                    return;
+                }
+
+                default: {
+                    ERR("Invalid 2nd byte of opcode: %04X", opcode);
+                    return;
+                } /* End: default */
+            }     /* End: byte2 switch */
+        }         /* End: case 0 */
+
         case 1: { /* JP addr */
             ctx->PC = opcode & 0xFFF;
             return;
@@ -190,37 +256,165 @@ void parse_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                     return;
                 }
 
-                /* TODO: Continue from: 9xy0 - SNE Vx, Vy */
-
                 default: {
                     ERR("Unknown 4th nibble of opcode: %04X", opcode);
                     return;
-                }
+                } /* End: default */
+            }     /* End: nibble 4 switch */
+        }         /* End: case 8 */
+
+        /* SNE Vx, Vy */
+        case 9: {
+            if (nibble4 != 0) {
+                ERR("Invalid 4th nibble of opcode: %04X", opcode);
+                return;
             }
-        }
 
-        default:
-            break;
-    }
-
-    /* Check full 2-byte instructions */
-    switch (opcode) {
-        /* CLS */
-        case 0x00E0: {
-            display_clear();
+            if (ctx->V[nibble2] != ctx->V[nibble3])
+                ctx->PC += 2;
             return;
         }
 
-        /* RET */
-        case 0x00EE: {
-            ctx->PC = stack_pop(ctx);
+        /* LD I, addr */
+        case 0xA: {
+            ctx->I = opcode & 0xFFF;
             return;
         }
 
-        default:
-            break;
-    }
+        /* JP V0, addr */
+        case 0xB: {
+            ctx->PC = ctx->V[0] + (opcode & 0xFFF);
+            return;
+        }
 
-    /* If we reached here, this was an invalid instruction */
-    ERR("Invalid or unsupported opcode: %04X", opcode);
+        /* RND Vx, byte */
+        case 0xC: {
+            const uint8_t random_byte = rand() % 0xFF;
+            ctx->V[nibble2]           = random_byte & byte2;
+            return;
+        }
+
+        /* DRW Vx, Vy, nibble */
+        case 0xD: {
+            const int x           = ctx->V[nibble2];
+            const int y           = ctx->V[nibble3];
+            const void* bytes     = &ctx->mem[ctx->I];
+            const int byte_number = nibble4;
+
+            /* If there is a collision (a pixel was set, but is cleared after
+             * the draw operation), set VF to 1. Set it to 0 otherwise. */
+            ctx->V[0xF] = display_draw_sprite(x, y, bytes, byte_number);
+
+            return;
+        }
+
+        case 0xE: {
+            const int key = ctx->V[nibble2];
+
+            switch (byte2) {
+                /* SKP Vx */
+                case 0x9E: {
+                    if (kb_is_held(key))
+                        ctx->PC += 2;
+                    return;
+                }
+
+                /* SKNP Vx */
+                case 0xA1: {
+                    if (!kb_is_held(key))
+                        ctx->PC += 2;
+                    return;
+                }
+
+                default: {
+                    ERR("Invalid 2nd byte of opcode: %04X", opcode);
+                    return;
+                } /* End: default */
+            }     /* End: byte 2 switch */
+        }         /* End: case 0xE */
+
+        case 0xF: {
+            switch (byte2) {
+                /* LD Vx, DT */
+                case 0x07: {
+                    ctx->V[nibble2] = ctx->DT;
+                    return;
+                }
+
+                /* LD Vx, K */
+                case 0x0A: {
+                    /* TODO: Wait for keypress, save in Vx. Change return
+                     * depending on it. */
+                    return;
+                }
+
+                /* LD DT, Vx */
+                case 0x15: {
+                    ctx->DT = ctx->V[nibble2];
+                    return;
+                }
+
+                /* LD ST, Vx */
+                case 0x18: {
+                    ctx->ST = ctx->V[nibble2];
+                    return;
+                }
+
+                /* ADD I, Vx */
+                case 0x1E: {
+                    ctx->I += ctx->V[nibble2];
+                    return;
+                }
+
+                /* LD F, Vx */
+                case 0x29: {
+                    ctx->I = DIGITS_ADDR + ctx->V[nibble2] * CHAR_SPRITE_H;
+                    return;
+                }
+
+                /* LD B, Vx */
+                case 0x33: {
+                    uint8_t n = ctx->V[nibble2];
+
+                    /* Store right-most decimal digit */
+                    ctx->mem[ctx->I + 2] = n % 10;
+
+                    /* Store middle decimal digit */
+                    n /= 10;
+                    ctx->mem[ctx->I + 1] = n % 10;
+
+                    /* Store left-most decimal digit */
+                    n /= 10;
+                    ctx->mem[ctx->I] = n % 10;
+
+                    return;
+                }
+
+                /* LD [I], Vx */
+                case 0x55: {
+                    for (int i = 0; i < nibble2; i++)
+                        ctx->mem[ctx->I + i] = ctx->V[i];
+                    return;
+                }
+
+                /* LD Vx, [I] */
+                case 0x65: {
+                    for (int i = 0; i < nibble2; i++)
+                        ctx->V[i] = ctx->mem[ctx->I + i];
+                    return;
+                }
+
+                default: {
+                    ERR("Invalid 2nd byte of opcode: %04X", opcode);
+                    return;
+                } /* End: default */
+            }     /* End: byte 2 switch */
+        }         /* End: case 0xE */
+
+        default: {
+            /* If we reached here, this was an invalid instruction */
+            ERR("Invalid or unsupported opcode: %04X", opcode);
+            return;
+        }
+    }
 }

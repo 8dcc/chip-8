@@ -1,9 +1,9 @@
 
 CC=gcc
-CFLAGS=-Wall -Wextra -Wpedantic
+CFLAGS=-std=gnu99 -Wall -Wextra -Wpedantic -ggdb3
 LDFLAGS=$(shell sdl2-config --cflags --libs)
 
-OBJ_FILES=main.c.o util.c.o display.c.o emulator.c.o
+OBJ_FILES=main.c.o util.c.o display.c.o emulator.c.o keyboard.c.o
 OBJS=$(addprefix obj/, $(OBJ_FILES))
 
 BIN=chip-8-emulator.out
