@@ -9,12 +9,6 @@
 #include "include/keyboard.h"
 #include "include/display.h"
 
-/* Emulated address where the digits start */
-#define DIGITS_ADDR 0x10
-
-/* Height (number of bytes) of each character sprite */
-#define CHAR_SPRITE_H 5
-
 #define DO_STEP   true
 #define DONT_STEP false
 
@@ -39,7 +33,7 @@ void emulator_init(EmulatorCtx* ctx) {
     ctx->I = ctx->DT = ctx->ST = 0;
 
     /* Initialize the program counter to where the programs are loaded */
-    ctx->PC = 0x200;
+    ctx->PC = ROM_LOAD_ADDR;
 
     /* Initialize the stack pointer, pointing to the bottom of the stack */
     ctx->SP = 0;
@@ -53,16 +47,24 @@ void emulator_free(EmulatorCtx* ctx) {
     free(ctx->mem);
 }
 
-/*----------------------------------------------------------------------------*/
-
 void emulator_load_rom(EmulatorCtx* ctx, const char* rom_filename) {
     FILE* fp = fopen(rom_filename, "rb");
     if (!fp)
         die("Failed to open file: '%s'\n", rom_filename);
 
-    char read_byte;
-    for (int i = ctx->PC; i < MEM_SZ && (read_byte = fgetc(fp)) != EOF; i++)
-        ctx->mem[i] = read_byte;
+    fseek(fp, 0L, SEEK_END);
+    size_t file_sz = ftell(fp);
+    fseek(fp, 0L, SEEK_SET);
+
+    const size_t max_sz = MEM_SZ - ROM_LOAD_ADDR;
+    if (file_sz > max_sz) {
+        ERR("Warning: ROM is too large. Reading up to 0x%X bytes.", max_sz);
+        file_sz = max_sz;
+    }
+
+    for (size_t i = 0; i < file_sz; i++)
+        ctx->mem[ctx->PC + i] = fgetc(fp);
+}
 }
 
 /*----------------------------------------------------------------------------*/

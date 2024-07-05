@@ -5,7 +5,17 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/* Size of the memory we are emulating */
 #define MEM_SZ 0x1000
+
+/* Address where the ROMs are loaded, and the initial value of PC */
+#define ROM_LOAD_ADDR 0x200
+
+/* Emulated address where the digits start */
+#define DIGITS_ADDR 0x10
+
+/* Height (number of bytes) of each character sprite */
+#define CHAR_SPRITE_H 5
 
 typedef struct EmulatorCtx {
     /* Memory, array of MEM_SZ bytes */
