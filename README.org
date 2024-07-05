@@ -17,7 +17,11 @@
 This is meant to be a simple and easy to understand emulator. I tried to keep
 the code as clean and separated as possible.
 
-Credits for the CHIP-8 reference: [[https://devernay.free.fr/hacks/chip8/C8TECH10.HTM][Thomas P. Greene]].
+Credits:
+- Cowgod's (Thomas P. Greene) CHIP-8 reference: [[https://devernay.free.fr/hacks/chip8/C8TECH10.HTM][Link]]. Note that some information
+  appears to be wrong.
+- Gulrak's opcode table: [[https://chip8.gulrak.net/][Link]].
+- Timendus' test suite: [[https://github.com/Timendus/chip8-test-suite][Link]].
 
 * Building
 
