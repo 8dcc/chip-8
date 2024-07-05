@@ -61,7 +61,7 @@ void emulator_load_rom(EmulatorCtx* ctx, const char* rom_filename) {
         die("Failed to open file: '%s'\n", rom_filename);
 
     char read_byte;
-    for (int i = ctx->PC; (read_byte = fgetc(fp)) != EOF; i++)
+    for (int i = ctx->PC; i < MEM_SZ && (read_byte = fgetc(fp)) != EOF; i++)
         ctx->mem[i] = read_byte;
 }
 
