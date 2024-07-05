@@ -98,10 +98,10 @@ void emulator_tick(EmulatorCtx* ctx) {
     ctx->PC += 2;
 
     /* Parse and execute the instruction */
-    parse_instruction(ctx, current_opcode);
+    exec_instruction(ctx, current_opcode);
 }
 
-void parse_instruction(EmulatorCtx* ctx, uint16_t opcode) {
+void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
     /* Groups of 8 bits, from left to right */
     const uint8_t byte1 = (opcode >> 8) & 0xFF;
     const uint8_t byte2 = opcode & 0xFF;

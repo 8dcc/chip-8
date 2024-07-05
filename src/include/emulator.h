@@ -53,8 +53,7 @@ uint16_t stack_pop(EmulatorCtx* ctx);
 /* Parse current instruction, and increment the Program Counter if needed */
 void emulator_tick(EmulatorCtx* ctx);
 
-/* Parse and execute the instruction with the specified opcode.
- * TODO: Rename to `execute_instruction'. */
-void parse_instruction(EmulatorCtx* ctx, uint16_t opcode);
+/* Parse and execute the instruction with the specified opcode */
+void exec_instruction(EmulatorCtx* ctx, uint16_t opcode);
 
 #endif /* EMULATOR_H_ */
