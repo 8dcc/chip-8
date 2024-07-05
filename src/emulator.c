@@ -175,11 +175,21 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
         /* SE Vx, byte */
         case 3: {
-            if (ctx->V[nibble2] == byte2)
+            const bool cmp = ctx->V[nibble2] == byte2;
+            if (cmp)
                 ctx->PC += 2;
 
-            PRNT_I("SE V%X, %X\t\t\t; Cmp: %X", nibble2, byte2,
-                   ctx->V[nibble2] == byte2);
+            PRNT_I("SE V%X, %X\t\t\t; Cmp: %X", nibble2, byte2, cmp);
+            return;
+        }
+
+        /* SNE Vx, byte */
+        case 4: {
+            const bool cmp = ctx->V[nibble2] != byte2;
+            if (cmp)
+                ctx->PC += 2;
+
+            PRNT_I("SNE V%X, %X\t\t\t; Cmp: %X", nibble2, byte2, cmp);
             return;
         }
 
@@ -190,11 +200,11 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                 return;
             }
 
-            if (ctx->V[nibble2] == ctx->V[nibble3])
+            const bool cmp = ctx->V[nibble2] == ctx->V[nibble3];
+            if (cmp)
                 ctx->PC += 2;
 
-            PRNT_I("SE V%X, V%X\t\t\t; Cmp: %X", nibble2, nibble3,
-                   ctx->V[nibble2] == ctx->V[nibble3]);
+            PRNT_I("SE V%X, V%X\t\t\t; Cmp: %X", nibble2, nibble3, cmp);
             return;
         }
 
@@ -325,11 +335,11 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                 return;
             }
 
-            if (ctx->V[nibble2] != ctx->V[nibble3])
+            const bool cmp = ctx->V[nibble2] != ctx->V[nibble3];
+            if (cmp)
                 ctx->PC += 2;
 
-            PRNT_I("SNE V%X, V%X\t\t\t; Cmp: %X", nibble2, nibble3,
-                   ctx->V[nibble2] != ctx->V[nibble3]);
+            PRNT_I("SNE V%X, V%X\t\t\t; Cmp: %X", nibble2, nibble3, cmp);
             return;
         }
 
