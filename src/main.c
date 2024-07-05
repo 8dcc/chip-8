@@ -4,9 +4,8 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 
-#define WINDOW_W 640
-#define WINDOW_H 480
-#define FPS      60
+#include "include/display.h"
+#include "include/emulator.h"
 
 /*----------------------------------------------------------------------------*/
 /* Globals */
@@ -50,8 +49,9 @@ int main(void) {
         die("Unable to start SDL.");
 
     /* Create SDL window */
-    g_window = SDL_CreateWindow("TODO: Title", SDL_WINDOWPOS_CENTERED,
-                                SDL_WINDOWPOS_CENTERED, WINDOW_W, WINDOW_H, 0);
+    g_window = SDL_CreateWindow("CHIP-8 Emulator", SDL_WINDOWPOS_CENTERED,
+                                SDL_WINDOWPOS_CENTERED, DISP_W * DISP_SCALE,
+                                DISP_H * DISP_SCALE, 0);
     if (!g_window)
         die("Error creating SDL window.");
 
@@ -63,6 +63,11 @@ int main(void) {
         SDL_DestroyWindow(g_window);
         die("Error creating SDL renderer.");
     }
+
+    /* TODO: Initialize the emulator */
+
+    /* Initialize the display */
+    display_clear();
 
     /* Main loop */
     bool running = true;
