@@ -179,7 +179,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
             if (cmp)
                 ctx->PC += 2;
 
-            PRNT_I("SE V%X, %X\t\t\t; Cmp: %X", nibble2, byte2, cmp);
+            PRNT_I("SE V%X, %X\t\t; Cmp: %X", nibble2, byte2, cmp);
             return;
         }
 
@@ -189,7 +189,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
             if (cmp)
                 ctx->PC += 2;
 
-            PRNT_I("SNE V%X, %X\t\t\t; Cmp: %X", nibble2, byte2, cmp);
+            PRNT_I("SNE V%X, %X\t\t; Cmp: %X", nibble2, byte2, cmp);
             return;
         }
 
@@ -204,7 +204,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
             if (cmp)
                 ctx->PC += 2;
 
-            PRNT_I("SE V%X, V%X\t\t\t; Cmp: %X", nibble2, nibble3, cmp);
+            PRNT_I("SE V%X, V%X\t\t; Cmp: %X", nibble2, nibble3, cmp);
             return;
         }
 
@@ -221,7 +221,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
             const uint16_t result = ctx->V[nibble2] + byte2;
             ctx->V[nibble2]       = result & 0xFF;
 
-            PRNT_I("ADD V%X, %X\t\t\t; Result: %X", nibble2, byte2,
+            PRNT_I("ADD V%X, %X\t\t; Result: %X", nibble2, byte2,
                    ctx->V[nibble2]);
             return;
         }
@@ -266,7 +266,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
                     ctx->V[nibble2] = result & 0xFF;
 
-                    PRNT_I("ADD V%X, V%X\t\t\t; Result: %X, Flag: %X", nibble2,
+                    PRNT_I("ADD V%X, V%X\t\t; Result: %X, Flag: %X", nibble2,
                            nibble3, ctx->V[nibble2], ctx->V[0xF]);
                     return;
                 }
@@ -278,7 +278,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
                     ctx->V[nibble2] -= ctx->V[nibble3];
 
-                    PRNT_I("SUB V%X, V%X\t\t\t; Result: %X, Flag: %X", nibble2,
+                    PRNT_I("SUB V%X, V%X\t\t; Result: %X, Flag: %X", nibble2,
                            nibble3, ctx->V[nibble2], ctx->V[0xF]);
                     return;
                 }
@@ -291,7 +291,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                     /* Shift 1 bit to the right, effectively dividing by 2 */
                     ctx->V[nibble2] >>= 1;
 
-                    PRNT_I("SHR V%X\t\t\t\t; Result: %X, Flag: %X", nibble2,
+                    PRNT_I("SHR V%X\t\t\t; Result: %X, Flag: %X", nibble2,
                            ctx->V[nibble2], ctx->V[0xF]);
                     return;
                 }
@@ -316,7 +316,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                     /* Shift 1 bit to the left, effectively multiplying by 2 */
                     ctx->V[nibble2] <<= 1;
 
-                    PRNT_I("SHL V%X\t\t\t\t; Result: %X, Flag: %X", nibble2,
+                    PRNT_I("SHL V%X\t\t\t; Result: %X, Flag: %X", nibble2,
                            ctx->V[nibble2], ctx->V[0xF]);
                     return;
                 }
@@ -339,7 +339,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
             if (cmp)
                 ctx->PC += 2;
 
-            PRNT_I("SNE V%X, V%X\t\t\t; Cmp: %X", nibble2, nibble3, cmp);
+            PRNT_I("SNE V%X, V%X\t\t; Cmp: %X", nibble2, nibble3, cmp);
             return;
         }
 
@@ -394,7 +394,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                     if (held)
                         ctx->PC += 2;
 
-                    PRNT_I("SKP V%X\t\t\t\t; Cmp: %X", nibble2, held);
+                    PRNT_I("SKP V%X\t\t\t; Cmp: %X", nibble2, held);
                     return;
                 }
 
@@ -403,7 +403,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                     if (!held)
                         ctx->PC += 2;
 
-                    PRNT_I("SKP V%X\t\t\t\t; Cmp: %X", nibble2, !held);
+                    PRNT_I("SKP V%X\t\t\t; Cmp: %X", nibble2, !held);
                     return;
                 }
 
@@ -448,7 +448,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                 /* ADD I, Vx */
                 case 0x1E: {
                     ctx->I += ctx->V[nibble2];
-                    PRNT_I("ADD I, V%X\t\t\t; Result: %X", nibble2, ctx->I);
+                    PRNT_I("ADD I, V%X\t\t; Result: %X", nibble2, ctx->I);
                     return;
                 }
 
