@@ -470,7 +470,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
                 /* LD [I], Vx */
                 case 0x55: {
-                    for (int i = 0; i < nibble2; i++)
+                    for (int i = 0; i <= nibble2; i++)
                         ctx->mem[ctx->I + i] = ctx->V[i];
 
                     PRNT_I("LD [I], V%X", nibble2);
@@ -479,7 +479,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
                 /* LD Vx, [I] */
                 case 0x65: {
-                    for (int i = 0; i < nibble2; i++)
+                    for (int i = 0; i <= nibble2; i++)
                         ctx->V[i] = ctx->mem[ctx->I + i];
 
                     PRNT_I("LD [I], V%X", nibble2);
