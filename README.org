@@ -1,4 +1,4 @@
-#+title: Title
+#+title: CHIP-8 Emulator
 #+options: toc:nil
 #+startup: showeverything
 #+author: 8dcc
@@ -8,19 +8,22 @@
 *TODO*: Change output.out in Makefile
 #+end_comment
 
-*Short description.*
+*A [[https://en.wikipedia.org/wiki/CHIP-8][CHIP-8]] emulator made in C with SDL2.*
 
 #+TOC: headlines 2
 
 * Description
 
-Long description.
+This is meant to be a simple and easy to understand emulator. I tried to keep
+the code as clean and separated as possible.
+
+Credits for the CHIP-8 reference: [[https://devernay.free.fr/hacks/chip8/C8TECH10.HTM][Thomas P. Greene]].
 
 * Building
 
 #+begin_src console
-$ git clone https://github.com/8dcc/project-name
-$ cd project-name
+$ git clone https://github.com/8dcc/chip-8
+$ cd chip-8
 $ make
 ...
 #+end_src
