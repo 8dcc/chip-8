@@ -7,6 +7,17 @@
 /* Wrapper for err_msg() */
 #define ERR(...) err_msg(__func__, __VA_ARGS__)
 
+#ifdef PRINT_INSTRUCTIONS
+#define PRNT_I(...)              \
+    do {                         \
+        printf("%X:\t", ctx->PC); \
+        printf(__VA_ARGS__);     \
+        putchar('\n');           \
+    } while (0)
+#else
+#define PRNT_I(...)
+#endif
+
 /*----------------------------------------------------------------------------*/
 
 /* Print error message to stderr, call all the relevant SDL functions, and exit

@@ -119,12 +119,16 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                 /* CLS */
                 case 0xE0: {
                     display_clear();
+
+                    PRNT_I("CLS");
                     return;
                 }
 
                 /* RET */
                 case 0xEE: {
                     ctx->PC = stack_pop(ctx);
+
+                    PRNT_I("RET");
                     return;
                 }
 
@@ -137,14 +141,17 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
         case 1: { /* JP addr */
             ctx->PC = opcode & 0xFFF;
+            PRNT_I("JP %X", opcode & 0xFFF);
             return;
         }
 
         /* CALL addr */
         case 2: {
             /* Push address of current instruction + size of opcode */
-            stack_push(ctx, ctx->PC + sizeof(opcode));
+            stack_push(ctx, ctx->PC);
             ctx->PC = opcode & 0xFFF;
+
+            PRNT_I("CALL %X", opcode & 0xFFF);
             return;
         }
 
@@ -152,6 +159,9 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
         case 3: {
             if (ctx->V[nibble2] == byte2)
                 ctx->PC += 2;
+
+            PRNT_I("SE V%X, %X\t\t\t; Cmp: %X", nibble2, byte2,
+                   ctx->V[nibble2] == byte2);
             return;
         }
 
@@ -164,45 +174,57 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
             if (ctx->V[nibble2] == ctx->V[nibble3])
                 ctx->PC += 2;
+
+            PRNT_I("SE V%X, V%X\t\t\t; Cmp: %X", nibble2, nibble3,
+                   ctx->V[nibble2] == ctx->V[nibble3]);
             return;
         }
 
         /* LD Vx, byte */
         case 6: {
             ctx->V[nibble2] = byte2;
+            PRNT_I("LD V%X, %X", nibble2, byte2);
             return;
         }
 
         /* ADD Vx, byte */
         case 7: {
             /* NOTE: Unlike with `ADD Vx, Vy', the carry flag is not changed */
-            ctx->V[nibble2] += byte2;
+            const uint16_t result = ctx->V[nibble2] + byte2;
+            ctx->V[nibble2]       = result & 0xFF;
+
+            PRNT_I("ADD V%X, %X\t\t\t; Result: %X", nibble2, byte2,
+                   ctx->V[nibble2]);
             return;
         }
 
         case 8: {
             switch (nibble4) {
-                /* LD Vx, byte */
+                /* LD Vx, Vy */
                 case 0: {
                     ctx->V[nibble2] = ctx->V[nibble3];
+                    PRNT_I("LD V%X, V%X", nibble2, nibble3);
                     return;
                 }
 
                 /* OR Vx, Vy */
                 case 1: {
                     ctx->V[nibble2] |= ctx->V[nibble3];
+                    PRNT_I("OR V%X, V%X", nibble2, nibble3);
                     return;
                 }
 
                 /* AND Vx, Vy */
                 case 2: {
                     ctx->V[nibble2] &= ctx->V[nibble3];
+                    PRNT_I("AND V%X, V%X", nibble2, nibble3);
                     return;
                 }
 
                 /* XOR Vx, Vy */
                 case 3: {
                     ctx->V[nibble2] ^= ctx->V[nibble3];
+                    PRNT_I("XOR V%X, V%X", nibble2, nibble3);
                     return;
                 }
 
@@ -215,15 +237,21 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                         ctx->V[0xF] = 1;
 
                     ctx->V[nibble2] = result & 0xFF;
+
+                    PRNT_I("ADD V%X, V%X\t\t\t; Result: %X, Flag: %X", nibble2,
+                           nibble3, ctx->V[nibble2], ctx->V[0xF]);
                     return;
                 }
 
                 /* SUB Vx, Vy */
                 case 5: {
-                    /* Set the carry flag, if needed */
-                    ctx->V[0xF] = ctx->V[nibble2] > ctx->V[nibble3];
+                    /* Set the (negated) borrow flag, if needed */
+                    ctx->V[0xF] = ctx->V[nibble2] >= ctx->V[nibble3];
 
                     ctx->V[nibble2] -= ctx->V[nibble3];
+
+                    PRNT_I("SUB V%X, V%X\t\t\t; Result: %X, Flag: %X", nibble2,
+                           nibble3, ctx->V[nibble2], ctx->V[0xF]);
                     return;
                 }
 
@@ -234,15 +262,21 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
                     /* Shift 1 bit to the right, effectively dividing by 2 */
                     ctx->V[nibble2] >>= 1;
+
+                    PRNT_I("SHR V%X\t\t\t\t; Result: %X, Flag: %X", nibble2,
+                           ctx->V[nibble2], ctx->V[0xF]);
                     return;
                 }
 
                 /* SUBN Vx, Vy */
                 case 7: {
                     /* Set the carry flag, if needed */
-                    ctx->V[0xF] = ctx->V[nibble3] > ctx->V[nibble2];
+                    ctx->V[0xF] = ctx->V[nibble3] >= ctx->V[nibble2];
 
                     ctx->V[nibble2] = ctx->V[nibble3] - ctx->V[nibble2];
+
+                    PRNT_I("SUBN V%X, V%X\t\t\t; Result: %X, Flag: %X", nibble2,
+                           nibble3, ctx->V[nibble2], ctx->V[0xF]);
                     return;
                 }
 
@@ -253,6 +287,9 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
                     /* Shift 1 bit to the left, effectively multiplying by 2 */
                     ctx->V[nibble2] <<= 1;
+
+                    PRNT_I("SHL V%X\t\t\t\t; Result: %X, Flag: %X", nibble2,
+                           ctx->V[nibble2], ctx->V[0xF]);
                     return;
                 }
 
@@ -272,18 +309,24 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
             if (ctx->V[nibble2] != ctx->V[nibble3])
                 ctx->PC += 2;
+
+            PRNT_I("SNE V%X, V%X\t\t\t; Cmp: %X", nibble2, nibble3,
+                   ctx->V[nibble2] != ctx->V[nibble3]);
             return;
         }
 
         /* LD I, addr */
         case 0xA: {
             ctx->I = opcode & 0xFFF;
+            PRNT_I("LD I, %X", opcode & 0xFFF);
             return;
         }
 
         /* JP V0, addr */
         case 0xB: {
             ctx->PC = ctx->V[0] + (opcode & 0xFFF);
+            PRNT_I("JP V0, %X\t\t\t; Addr: %X", opcode & 0xFFF,
+                   ctx->V[0] + (opcode & 0xFFF));
             return;
         }
 
@@ -291,38 +334,48 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
         case 0xC: {
             const uint8_t random_byte = rand() % 0xFF;
             ctx->V[nibble2]           = random_byte & byte2;
+
+            PRNT_I("RND V%X, %X\t\t\t; Result: %X", nibble2, byte2,
+                   ctx->V[nibble2]);
             return;
         }
 
         /* DRW Vx, Vy, nibble */
         case 0xD: {
-            const int x           = ctx->V[nibble2];
-            const int y           = ctx->V[nibble3];
-            const void* bytes     = &ctx->mem[ctx->I];
-            const int byte_number = nibble4;
+            const uint8_t x           = ctx->V[nibble2];
+            const uint8_t y           = ctx->V[nibble3];
+            const void* bytes         = &ctx->mem[ctx->I];
+            const uint8_t byte_number = nibble4;
 
             /* If there is a collision (a pixel was set, but is cleared after
              * the draw operation), set VF to 1. Set it to 0 otherwise. */
             ctx->V[0xF] = display_draw_sprite(x, y, bytes, byte_number);
 
+            PRNT_I("DRW V%X, V%X, %X\t\t; I: %X", nibble2, nibble3, nibble4,
+                   ctx->I);
             return;
         }
 
         case 0xE: {
-            const int key = ctx->V[nibble2];
+            const int key   = ctx->V[nibble2];
+            const bool held = kb_is_held(key);
 
             switch (byte2) {
                 /* SKP Vx */
                 case 0x9E: {
-                    if (kb_is_held(key))
+                    if (held)
                         ctx->PC += 2;
+
+                    PRNT_I("SKP V%X\t\t\t\t; Cmp: %X", nibble2, held);
                     return;
                 }
 
                 /* SKNP Vx */
                 case 0xA1: {
-                    if (!kb_is_held(key))
+                    if (!held)
                         ctx->PC += 2;
+
+                    PRNT_I("SKP V%X\t\t\t\t; Cmp: %X", nibble2, !held);
                     return;
                 }
 
@@ -338,6 +391,8 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                 /* LD Vx, DT */
                 case 0x07: {
                     ctx->V[nibble2] = ctx->DT;
+                    PRNT_I("LD V%X, DT\t\t\t; Result: %X", nibble2,
+                           ctx->V[nibble2]);
                     return;
                 }
 
@@ -351,24 +406,28 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                 /* LD DT, Vx */
                 case 0x15: {
                     ctx->DT = ctx->V[nibble2];
+                    PRNT_I("LD DT, V%X", nibble2);
                     return;
                 }
 
                 /* LD ST, Vx */
                 case 0x18: {
                     ctx->ST = ctx->V[nibble2];
+                    PRNT_I("LD ST, V%X", nibble2);
                     return;
                 }
 
                 /* ADD I, Vx */
                 case 0x1E: {
                     ctx->I += ctx->V[nibble2];
+                    PRNT_I("ADD I, V%X\t\t\t; Result: %X", nibble2, ctx->I);
                     return;
                 }
 
                 /* LD F, Vx */
                 case 0x29: {
                     ctx->I = DIGITS_ADDR + ctx->V[nibble2] * CHAR_SPRITE_H;
+                    PRNT_I("LD F, V%X\t\t\t; Addr: %X", nibble2, ctx->I);
                     return;
                 }
 
@@ -387,6 +446,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                     n /= 10;
                     ctx->mem[ctx->I] = n % 10;
 
+                    PRNT_I("LD B, V%X", nibble2);
                     return;
                 }
 
@@ -394,6 +454,8 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                 case 0x55: {
                     for (int i = 0; i < nibble2; i++)
                         ctx->mem[ctx->I + i] = ctx->V[i];
+
+                    PRNT_I("LD [I], V%X", nibble2);
                     return;
                 }
 
@@ -401,6 +463,8 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                 case 0x65: {
                     for (int i = 0; i < nibble2; i++)
                         ctx->V[i] = ctx->mem[ctx->I + i];
+
+                    PRNT_I("LD [I], V%X", nibble2);
                     return;
                 }
 
