@@ -56,6 +56,10 @@ void emulator_free(EmulatorCtx* ctx);
 /* Load a ROM file into memory, at the current Program Counter (PC) address */
 void emulator_load_rom(EmulatorCtx* ctx, const char* rom_filename);
 
+/* Dump the specified number of bytes from the emulated memory, starting at
+ * ROM_LOAD_ADDR. */
+void emulator_dump_mem(EmulatorCtx* ctx, size_t sz);
+
 /* Push and pop values from the stack of the emulator */
 void stack_push(EmulatorCtx* ctx, uint16_t val);
 uint16_t stack_pop(EmulatorCtx* ctx);

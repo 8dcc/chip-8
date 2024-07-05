@@ -65,6 +65,22 @@ void emulator_load_rom(EmulatorCtx* ctx, const char* rom_filename) {
     for (size_t i = 0; i < file_sz; i++)
         ctx->mem[ctx->PC + i] = fgetc(fp);
 }
+
+/*----------------------------------------------------------------------------*/
+
+void emulator_dump_mem(EmulatorCtx* ctx, size_t sz) {
+    for (size_t i = 0; i < sz; i++) {
+        const int addr     = ROM_LOAD_ADDR + i;
+        const uint8_t byte = ctx->mem[addr];
+
+        if (addr % 0x10 == 0)
+            printf("\n%04X: ", addr);
+        else if (addr % 2 == 0)
+            putchar(' ');
+
+        printf("%02X", byte);
+    }
+    printf("\n\n");
 }
 
 /*----------------------------------------------------------------------------*/
