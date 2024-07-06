@@ -404,7 +404,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                 /* LD Vx, DT */
                 case 0x07: {
                     ctx->V[nibble2] = ctx->DT;
-                    PRNT_I("LD V%X, DT\t\t\t; Result: %X", nibble2,
+                    PRNT_I("LD V%X, DT\t\t; Result: %X", nibble2,
                            ctx->V[nibble2]);
                 } break;
 
@@ -412,6 +412,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                 case 0x0A: {
                     /* TODO: Wait for keypress, save in Vx. Change return
                      * depending on it. */
+                    PRNT_I("LD V%X, K\t\t\t; Not implemented", nibble2);
                 } break;
 
                 /* LD DT, Vx */
