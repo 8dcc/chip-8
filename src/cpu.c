@@ -87,6 +87,8 @@ void cpu_load_rom(CpuCtx* ctx, const char* rom_filename) {
 
     for (size_t i = 0; i < file_sz; i++)
         ctx->mem[ctx->PC + i] = fgetc(fp);
+
+    fclose(fp);
 }
 
 /*----------------------------------------------------------------------------*/
