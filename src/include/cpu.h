@@ -1,6 +1,6 @@
 
-#ifndef EMULATOR_H_
-#define EMULATOR_H_ 1
+#ifndef CPU_H_
+#define CPU_H_ 1
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -21,7 +21,7 @@
  * instructions will run at (60*N) Hz. */
 #define INSTRUCTIONS_PER_FRAME 10
 
-typedef struct EmulatorCtx {
+typedef struct CpuCtx {
     /* Memory, array of MEM_SZ bytes */
     uint8_t* mem;
 
@@ -46,39 +46,35 @@ typedef struct EmulatorCtx {
 
     /* Stack */
     uint16_t stack[16];
-} EmulatorCtx;
+} CpuCtx;
 
 /*----------------------------------------------------------------------------*/
 
-/* Initialize a emulator context structure */
-void emulator_init(EmulatorCtx* ctx);
+/* Initialize a CPU context structure */
+void cpu_init(CpuCtx* ctx);
 
-/* Free the necessary members of an emulator context structure. Doesn't free the
+/* Free the necessary members of an CPU context structure. Doesn't free the
  * context structure itself. */
-void emulator_free(EmulatorCtx* ctx);
+void cpu_free(CpuCtx* ctx);
 
 /* Load a ROM file into memory, at the current Program Counter (PC) address */
-void emulator_load_rom(EmulatorCtx* ctx, const char* rom_filename);
-
-/* Dump the specified number of bytes from the emulated memory, starting at
- * ROM_LOAD_ADDR. */
-void emulator_dump_mem(EmulatorCtx* ctx, size_t sz);
-
-/* Push and pop values from the stack of the emulator */
-void stack_push(EmulatorCtx* ctx, uint16_t val);
-uint16_t stack_pop(EmulatorCtx* ctx);
+void cpu_load_rom(CpuCtx* ctx, const char* rom_filename);
 
 /* This function should be called at a rate of 60Hz. It will execute
- * INSTRUCTIONS_PER_FRAME instructions by calling `emulator_cycle', and then
+ * INSTRUCTIONS_PER_FRAME instructions by calling `cpu_cycle', and then
  * decrement the timers if needed. */
-void emulator_frame(EmulatorCtx* ctx);
+void cpu_frame(CpuCtx* ctx);
 
 /* Increment the Program Counter and execute the next instruction by calling
- * `emulator_exec'. */
-void emulator_cycle(EmulatorCtx* ctx);
+ * `cpu_exec'. */
+void cpu_cycle(CpuCtx* ctx);
 
 /* Parse, execute and (optionally) print the instruction with the specified
  * opcode. */
-void emulator_exec(EmulatorCtx* ctx, uint16_t opcode);
+void cpu_exec(CpuCtx* ctx, uint16_t opcode);
 
-#endif /* EMULATOR_H_ */
+/* Dump the specified number of bytes from the emulated memory, starting at
+ * ROM_LOAD_ADDR. */
+void cpu_dump_mem(CpuCtx* ctx, size_t sz);
+
+#endif /* CPU_H_ */

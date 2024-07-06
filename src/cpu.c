@@ -5,14 +5,37 @@
 #include <stdlib.h>
 
 #include "include/util.h"
-#include "include/emulator.h"
+#include "include/cpu.h"
 #include "include/keyboard.h"
 #include "include/display.h"
 
 #define DO_STEP   true
 #define DONT_STEP false
 
-void emulator_init(EmulatorCtx* ctx) {
+/*----------------------------------------------------------------------------*/
+
+/* Push and pop values from the stack of the CPU */
+static void stack_push(CpuCtx* ctx, uint16_t val) {
+    if (ctx->SP >= LENGTH(ctx->stack)) {
+        ERR("Tried pushing with SP: %d", ctx->SP);
+        return;
+    }
+
+    ctx->stack[ctx->SP++] = val;
+}
+
+static uint16_t stack_pop(CpuCtx* ctx) {
+    if (ctx->SP <= 0) {
+        ERR("Tried popping with SP: %d", ctx->SP);
+        return 0;
+    }
+
+    return ctx->stack[--ctx->SP];
+}
+
+/*----------------------------------------------------------------------------*/
+
+void cpu_init(CpuCtx* ctx) {
     /* Allocate emulated memory */
     ctx->mem = calloc(MEM_SZ, sizeof(uint8_t));
 
@@ -43,11 +66,11 @@ void emulator_init(EmulatorCtx* ctx) {
         ctx->stack[i] = 0;
 }
 
-void emulator_free(EmulatorCtx* ctx) {
+void cpu_free(CpuCtx* ctx) {
     free(ctx->mem);
 }
 
-void emulator_load_rom(EmulatorCtx* ctx, const char* rom_filename) {
+void cpu_load_rom(CpuCtx* ctx, const char* rom_filename) {
     FILE* fp = fopen(rom_filename, "rb");
     if (!fp)
         die("Failed to open file: '%s'\n", rom_filename);
@@ -68,47 +91,10 @@ void emulator_load_rom(EmulatorCtx* ctx, const char* rom_filename) {
 
 /*----------------------------------------------------------------------------*/
 
-void emulator_dump_mem(EmulatorCtx* ctx, size_t sz) {
-    for (size_t i = 0; i < sz; i++) {
-        const int addr     = ROM_LOAD_ADDR + i;
-        const uint8_t byte = ctx->mem[addr];
-
-        if (addr % 0x10 == 0)
-            printf("\n%04X: ", addr);
-        else if (addr % 2 == 0)
-            putchar(' ');
-
-        printf("%02X", byte);
-    }
-    printf("\n\n");
-}
-
-/*----------------------------------------------------------------------------*/
-
-void stack_push(EmulatorCtx* ctx, uint16_t val) {
-    if (ctx->SP >= LENGTH(ctx->stack)) {
-        ERR("Tried pushing with SP: %d", ctx->SP);
-        return;
-    }
-
-    ctx->stack[ctx->SP++] = val;
-}
-
-uint16_t stack_pop(EmulatorCtx* ctx) {
-    if (ctx->SP <= 0) {
-        ERR("Tried popping with SP: %d", ctx->SP);
-        return 0;
-    }
-
-    return ctx->stack[--ctx->SP];
-}
-
-/*----------------------------------------------------------------------------*/
-
-void emulator_frame(EmulatorCtx* ctx) {
+void cpu_frame(CpuCtx* ctx) {
     /* Each frame, run N instructions */
     for (int i = 0; i < INSTRUCTIONS_PER_FRAME; i++)
-        emulator_cycle(ctx);
+        cpu_cycle(ctx);
 
     /* Decrement the timers, if needed */
     if (ctx->DT > 0)
@@ -117,7 +103,7 @@ void emulator_frame(EmulatorCtx* ctx) {
         ctx->ST--;
 }
 
-void emulator_cycle(EmulatorCtx* ctx) {
+void cpu_cycle(CpuCtx* ctx) {
     /* Read next two bytes at the Program Counter. CHIP-8 is always
      * big-endian. */
     uint16_t current_opcode;
@@ -128,10 +114,10 @@ void emulator_cycle(EmulatorCtx* ctx) {
     ctx->PC += 2;
 
     /* Parse and execute the instruction */
-    emulator_exec(ctx, current_opcode);
+    cpu_exec(ctx, current_opcode);
 }
 
-void emulator_exec(EmulatorCtx* ctx, uint16_t opcode) {
+void cpu_exec(CpuCtx* ctx, uint16_t opcode) {
     /* Groups of 8 bits, from left to right */
     const uint8_t byte1 = (opcode >> 8) & 0xFF;
     const uint8_t byte2 = opcode & 0xFF;
@@ -496,4 +482,21 @@ void emulator_exec(EmulatorCtx* ctx, uint16_t opcode) {
             ERR("Invalid or unsupported opcode: %04X", opcode);
         } break;
     }
+}
+
+/*----------------------------------------------------------------------------*/
+
+void cpu_dump_mem(CpuCtx* ctx, size_t sz) {
+    for (size_t i = 0; i < sz; i++) {
+        const int addr     = ROM_LOAD_ADDR + i;
+        const uint8_t byte = ctx->mem[addr];
+
+        if (addr % 0x10 == 0)
+            printf("\n%04X: ", addr);
+        else if (addr % 2 == 0)
+            putchar(' ');
+
+        printf("%02X", byte);
+    }
+    printf("\n\n");
 }

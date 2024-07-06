@@ -9,7 +9,7 @@
 #include "include/util.h"
 #include "include/main.h"
 #include "include/display.h"
-#include "include/emulator.h"
+#include "include/cpu.h"
 #include "include/keyboard.h"
 
 /*----------------------------------------------------------------------------*/
@@ -49,12 +49,12 @@ int main(int argc, char** argv) {
     /* Initialize the random seed for RND instruction */
     srand(time(NULL));
 
-    /* Initialize the emulator */
-    EmulatorCtx ctx;
-    emulator_init(&ctx);
+    /* Initialize the cpu */
+    CpuCtx ctx;
+    cpu_init(&ctx);
 
     /* Load the ROM file to memory */
-    emulator_load_rom(&ctx, rom_filename);
+    cpu_load_rom(&ctx, rom_filename);
 
     /* Initialize the display */
     display_clear();
@@ -136,7 +136,7 @@ int main(int argc, char** argv) {
         SDL_RenderClear(g_renderer);
 
         /* Render and CPU frequency is the same, 60Hz */
-        emulator_frame(&ctx);
+        cpu_frame(&ctx);
 
         /* Render the virtual display into the SDL window */
         display_render();
@@ -146,7 +146,7 @@ int main(int argc, char** argv) {
         SDL_Delay(1000 / FPS);
     }
 
-    emulator_free(&ctx);
+    cpu_free(&ctx);
 
     SDL_DestroyRenderer(g_renderer);
     SDL_DestroyWindow(g_window);
