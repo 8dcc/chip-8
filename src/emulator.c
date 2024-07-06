@@ -105,7 +105,19 @@ uint16_t stack_pop(EmulatorCtx* ctx) {
 
 /*----------------------------------------------------------------------------*/
 
-void emulator_tick(EmulatorCtx* ctx) {
+void emulator_frame(EmulatorCtx* ctx) {
+    /* Each frame, run N instructions */
+    for (int i = 0; i < INSTRUCTIONS_PER_FRAME; i++)
+        emulator_cycle(ctx);
+
+    /* Decrement the timers, if needed */
+    if (ctx->DT > 0)
+        ctx->DT--;
+    if (ctx->ST > 0)
+        ctx->ST--;
+}
+
+void emulator_cycle(EmulatorCtx* ctx) {
     /* Read next two bytes at the Program Counter. CHIP-8 is always
      * big-endian. */
     uint16_t current_opcode;
@@ -116,10 +128,10 @@ void emulator_tick(EmulatorCtx* ctx) {
     ctx->PC += 2;
 
     /* Parse and execute the instruction */
-    exec_instruction(ctx, current_opcode);
+    emulator_exec(ctx, current_opcode);
 }
 
-void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
+void emulator_exec(EmulatorCtx* ctx, uint16_t opcode) {
     /* Groups of 8 bits, from left to right */
     const uint8_t byte1 = (opcode >> 8) & 0xFF;
     const uint8_t byte2 = opcode & 0xFF;

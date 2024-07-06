@@ -17,6 +17,10 @@
 /* Height (number of bytes) of each character sprite */
 #define CHAR_SPRITE_H 5
 
+/* Number of instructions that will be ran on each 60Hz frame. In other words,
+ * instructions will run at (60*N) Hz. */
+#define INSTRUCTIONS_PER_FRAME 10
+
 typedef struct EmulatorCtx {
     /* Memory, array of MEM_SZ bytes */
     uint8_t* mem;
@@ -64,10 +68,17 @@ void emulator_dump_mem(EmulatorCtx* ctx, size_t sz);
 void stack_push(EmulatorCtx* ctx, uint16_t val);
 uint16_t stack_pop(EmulatorCtx* ctx);
 
-/* Parse current instruction, and increment the Program Counter if needed */
-void emulator_tick(EmulatorCtx* ctx);
+/* This function should be called at a rate of 60Hz. It will execute
+ * INSTRUCTIONS_PER_FRAME instructions by calling `emulator_cycle', and then
+ * decrement the timers if needed. */
+void emulator_frame(EmulatorCtx* ctx);
 
-/* Parse and execute the instruction with the specified opcode */
-void exec_instruction(EmulatorCtx* ctx, uint16_t opcode);
+/* Increment the Program Counter and execute the next instruction by calling
+ * `emulator_exec'. */
+void emulator_cycle(EmulatorCtx* ctx);
+
+/* Parse, execute and (optionally) print the instruction with the specified
+ * opcode. */
+void emulator_exec(EmulatorCtx* ctx, uint16_t opcode);
 
 #endif /* EMULATOR_H_ */

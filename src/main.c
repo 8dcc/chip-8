@@ -136,7 +136,7 @@ int main(int argc, char** argv) {
         SDL_RenderClear(g_renderer);
 
         /* Render and CPU frequency is the same, 60Hz */
-        emulator_tick(&ctx);
+        emulator_frame(&ctx);
 
         /* Render the virtual display into the SDL window */
         display_render();
