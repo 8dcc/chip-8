@@ -139,29 +139,25 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                     display_clear();
 
                     PRNT_I("CLS");
-                    return;
-                }
+                } break;
 
                 /* RET */
                 case 0xEE: {
                     ctx->PC = stack_pop(ctx);
 
                     PRNT_I("RET");
-                    return;
-                }
+                } break;
 
                 default: {
                     ERR("Invalid 2nd byte of opcode: %04X", opcode);
-                    return;
-                } /* End: default */
-            }     /* End: byte2 switch */
-        }         /* End: case 0 */
+                } break;
+            }
+        } break;
 
         case 1: { /* JP addr */
             ctx->PC = opcode & 0xFFF;
             PRNT_I("JP %X", opcode & 0xFFF);
-            return;
-        }
+        } break;
 
         /* CALL addr */
         case 2: {
@@ -170,8 +166,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
             ctx->PC = opcode & 0xFFF;
 
             PRNT_I("CALL %X", opcode & 0xFFF);
-            return;
-        }
+        } break;
 
         /* SE Vx, byte */
         case 3: {
@@ -180,8 +175,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                 ctx->PC += 2;
 
             PRNT_I("SE V%X, %X\t\t; Cmp: %X", nibble2, byte2, cmp);
-            return;
-        }
+        } break;
 
         /* SNE Vx, byte */
         case 4: {
@@ -190,30 +184,27 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                 ctx->PC += 2;
 
             PRNT_I("SNE V%X, %X\t\t; Cmp: %X", nibble2, byte2, cmp);
-            return;
-        }
+        } break;
 
         /* SE Vx, Vy */
         case 5: {
             if (nibble4 != 0) {
                 ERR("Invalid 4th nibble of opcode: %04X", opcode);
-                return;
             }
+            break;
 
             const bool cmp = ctx->V[nibble2] == ctx->V[nibble3];
             if (cmp)
                 ctx->PC += 2;
 
             PRNT_I("SE V%X, V%X\t\t; Cmp: %X", nibble2, nibble3, cmp);
-            return;
-        }
+        } break;
 
         /* LD Vx, byte */
         case 6: {
             ctx->V[nibble2] = byte2;
             PRNT_I("LD V%X, %X", nibble2, byte2);
-            return;
-        }
+        } break;
 
         /* ADD Vx, byte */
         case 7: {
@@ -223,8 +214,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
             PRNT_I("ADD V%X, %X\t\t; Result: %X", nibble2, byte2,
                    ctx->V[nibble2]);
-            return;
-        }
+        } break;
 
         case 8: {
             switch (nibble4) {
@@ -232,32 +222,28 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                 case 0: {
                     ctx->V[nibble2] = ctx->V[nibble3];
                     PRNT_I("LD V%X, V%X", nibble2, nibble3);
-                    return;
-                }
+                } break;
 
                 /* OR Vx, Vy */
                 case 1: {
                     ctx->V[nibble2] |= ctx->V[nibble3];
                     ctx->V[0xF] = 0;
                     PRNT_I("OR V%X, V%X", nibble2, nibble3);
-                    return;
-                }
+                } break;
 
                 /* AND Vx, Vy */
                 case 2: {
                     ctx->V[nibble2] &= ctx->V[nibble3];
                     ctx->V[0xF] = 0;
                     PRNT_I("AND V%X, V%X", nibble2, nibble3);
-                    return;
-                }
+                } break;
 
                 /* XOR Vx, Vy */
                 case 3: {
                     ctx->V[nibble2] ^= ctx->V[nibble3];
                     ctx->V[0xF] = 0;
                     PRNT_I("XOR V%X, V%X", nibble2, nibble3);
-                    return;
-                }
+                } break;
 
                 /* ADD Vx, Vy */
                 case 4: {
@@ -271,8 +257,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
                     PRNT_I("ADD V%X, V%X\t\t; Result: %X, Flag: %X", nibble2,
                            nibble3, ctx->V[nibble2], ctx->V[0xF]);
-                    return;
-                }
+                } break;
 
                 /* SUB Vx, Vy */
                 case 5: {
@@ -285,8 +270,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
                     PRNT_I("SUB V%X, V%X\t\t; Result: %X, Flag: %X", nibble2,
                            nibble3, ctx->V[nibble2], ctx->V[0xF]);
-                    return;
-                }
+                } break;
 
                 /* SHR Vx {, Vy} */
                 case 6: {
@@ -301,8 +285,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
                     PRNT_I("SHR V%X\t\t\t; Result: %X, Flag: %X", nibble2,
                            ctx->V[nibble2], ctx->V[0xF]);
-                    return;
-                }
+                } break;
 
                 /* SUBN Vx, Vy */
                 case 7: {
@@ -315,8 +298,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
                     PRNT_I("SUBN V%X, V%X\t\t; Result: %X, Flag: %X", nibble2,
                            nibble3, ctx->V[nibble2], ctx->V[0xF]);
-                    return;
-                }
+                } break;
 
                 /* SHL Vx {, Vy} */
                 case 0xE: {
@@ -331,45 +313,40 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
                     PRNT_I("SHL V%X\t\t\t; Result: %X, Flag: %X", nibble2,
                            ctx->V[nibble2], ctx->V[0xF]);
-                    return;
-                }
+                } break;
 
                 default: {
                     ERR("Unknown 4th nibble of opcode: %04X", opcode);
-                    return;
-                } /* End: default */
-            }     /* End: nibble 4 switch */
-        }         /* End: case 8 */
+                } break;
+            }
+        } break;
 
         /* SNE Vx, Vy */
         case 9: {
             if (nibble4 != 0) {
                 ERR("Invalid 4th nibble of opcode: %04X", opcode);
-                return;
             }
+            break;
 
             const bool cmp = ctx->V[nibble2] != ctx->V[nibble3];
             if (cmp)
                 ctx->PC += 2;
 
             PRNT_I("SNE V%X, V%X\t\t; Cmp: %X", nibble2, nibble3, cmp);
-            return;
-        }
+        } break;
 
         /* LD I, addr */
         case 0xA: {
             ctx->I = opcode & 0xFFF;
             PRNT_I("LD I, %X", opcode & 0xFFF);
-            return;
-        }
+        } break;
 
         /* JP V0, addr */
         case 0xB: {
             ctx->PC = ctx->V[0] + (opcode & 0xFFF);
             PRNT_I("JP V0, %X\t\t\t; Addr: %X", opcode & 0xFFF,
                    ctx->V[0] + (opcode & 0xFFF));
-            return;
-        }
+        } break;
 
         /* RND Vx, byte */
         case 0xC: {
@@ -378,8 +355,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
             PRNT_I("RND V%X, %X\t\t\t; Result: %X", nibble2, byte2,
                    ctx->V[nibble2]);
-            return;
-        }
+        } break;
 
         /* DRW Vx, Vy, nibble */
         case 0xD: {
@@ -394,8 +370,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
             PRNT_I("DRW V%X, V%X, %X\t\t; I: %X", nibble2, nibble3, nibble4,
                    ctx->I);
-            return;
-        }
+        } break;
 
         case 0xE: {
             const int key   = ctx->V[nibble2];
@@ -408,8 +383,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                         ctx->PC += 2;
 
                     PRNT_I("SKP V%X\t\t\t; Cmp: %X", nibble2, held);
-                    return;
-                }
+                } break;
 
                 /* SKNP Vx */
                 case 0xA1: {
@@ -417,15 +391,13 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                         ctx->PC += 2;
 
                     PRNT_I("SKP V%X\t\t\t; Cmp: %X", nibble2, !held);
-                    return;
-                }
+                } break;
 
                 default: {
                     ERR("Invalid 2nd byte of opcode: %04X", opcode);
-                    return;
-                } /* End: default */
-            }     /* End: byte 2 switch */
-        }         /* End: case 0xE */
+                } break;
+            }
+        } break;
 
         case 0xF: {
             switch (byte2) {
@@ -434,43 +406,37 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                     ctx->V[nibble2] = ctx->DT;
                     PRNT_I("LD V%X, DT\t\t\t; Result: %X", nibble2,
                            ctx->V[nibble2]);
-                    return;
-                }
+                } break;
 
                 /* LD Vx, K */
                 case 0x0A: {
                     /* TODO: Wait for keypress, save in Vx. Change return
                      * depending on it. */
-                    return;
-                }
+                } break;
 
                 /* LD DT, Vx */
                 case 0x15: {
                     ctx->DT = ctx->V[nibble2];
                     PRNT_I("LD DT, V%X", nibble2);
-                    return;
-                }
+                } break;
 
                 /* LD ST, Vx */
                 case 0x18: {
                     ctx->ST = ctx->V[nibble2];
                     PRNT_I("LD ST, V%X", nibble2);
-                    return;
-                }
+                } break;
 
                 /* ADD I, Vx */
                 case 0x1E: {
                     ctx->I += ctx->V[nibble2];
                     PRNT_I("ADD I, V%X\t\t; Result: %X", nibble2, ctx->I);
-                    return;
-                }
+                } break;
 
                 /* LD F, Vx */
                 case 0x29: {
                     ctx->I = DIGITS_ADDR + ctx->V[nibble2] * CHAR_SPRITE_H;
                     PRNT_I("LD F, V%X\t\t\t; Addr: %X", nibble2, ctx->I);
-                    return;
-                }
+                } break;
 
                 /* LD B, Vx */
                 case 0x33: {
@@ -488,8 +454,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                     ctx->mem[ctx->I] = n % 10;
 
                     PRNT_I("LD B, V%X", nibble2);
-                    return;
-                }
+                } break;
 
                 /* LD [I], Vx */
                 case 0x55: {
@@ -497,8 +462,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                         ctx->mem[ctx->I + i] = ctx->V[i];
 
                     PRNT_I("LD [I], V%X", nibble2);
-                    return;
-                }
+                } break;
 
                 /* LD Vx, [I] */
                 case 0x65: {
@@ -506,20 +470,17 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                         ctx->V[i] = ctx->mem[ctx->I + i];
 
                     PRNT_I("LD [I], V%X", nibble2);
-                    return;
-                }
+                } break;
 
                 default: {
                     ERR("Invalid 2nd byte of opcode: %04X", opcode);
-                    return;
-                } /* End: default */
-            }     /* End: byte 2 switch */
-        }         /* End: case 0xE */
+                } break;
+            }
+        } break;
 
         default: {
             /* If we reached here, this was an invalid instruction */
             ERR("Invalid or unsupported opcode: %04X", opcode);
-            return;
-        }
+        } break;
     }
 }
