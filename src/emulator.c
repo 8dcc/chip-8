@@ -238,6 +238,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                 /* OR Vx, Vy */
                 case 1: {
                     ctx->V[nibble2] |= ctx->V[nibble3];
+                    ctx->V[0xF] = 0;
                     PRNT_I("OR V%X, V%X", nibble2, nibble3);
                     return;
                 }
@@ -245,6 +246,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                 /* AND Vx, Vy */
                 case 2: {
                     ctx->V[nibble2] &= ctx->V[nibble3];
+                    ctx->V[0xF] = 0;
                     PRNT_I("AND V%X, V%X", nibble2, nibble3);
                     return;
                 }
@@ -252,6 +254,7 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                 /* XOR Vx, Vy */
                 case 3: {
                     ctx->V[nibble2] ^= ctx->V[nibble3];
+                    ctx->V[0xF] = 0;
                     PRNT_I("XOR V%X, V%X", nibble2, nibble3);
                     return;
                 }
@@ -260,11 +263,11 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                 case 4: {
                     const uint16_t result = ctx->V[nibble2] + ctx->V[nibble3];
 
-                    /* Set the carry flag, if needed */
-                    if (result > 0xFF)
-                        ctx->V[0xF] = 1;
-
+                    /* Store the lower byte of the result */
                     ctx->V[nibble2] = result & 0xFF;
+
+                    /* Set the carry flag, if needed */
+                    ctx->V[0xF] = result > 0xFF;
 
                     PRNT_I("ADD V%X, V%X\t\t; Result: %X, Flag: %X", nibble2,
                            nibble3, ctx->V[nibble2], ctx->V[0xF]);
@@ -274,9 +277,11 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
                 /* SUB Vx, Vy */
                 case 5: {
                     /* Set the (negated) borrow flag, if needed */
-                    ctx->V[0xF] = ctx->V[nibble2] >= ctx->V[nibble3];
+                    const bool borrow = ctx->V[nibble2] >= ctx->V[nibble3];
 
+                    /* Perform the subtraction before setting the borrow flag */
                     ctx->V[nibble2] -= ctx->V[nibble3];
+                    ctx->V[0xF] = borrow;
 
                     PRNT_I("SUB V%X, V%X\t\t; Result: %X, Flag: %X", nibble2,
                            nibble3, ctx->V[nibble2], ctx->V[0xF]);
@@ -285,11 +290,14 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
                 /* SHR Vx {, Vy} */
                 case 6: {
-                    /* Store in VF if bit 0 of Vx is set before the operation */
-                    ctx->V[0xF] = ctx->V[nibble2] & 1;
+                    /* VF will store if bit 7 of Vx was set before the
+                     * operation. */
+                    const bool discarded = ctx->V[nibble2] & 1;
 
-                    /* Shift 1 bit to the right, effectively dividing by 2 */
+                    /* Shift 1 bit to the right, effectively dividing by 2.
+                     * Make sure the flags are set after the operation. */
                     ctx->V[nibble2] >>= 1;
+                    ctx->V[0xF] = discarded;
 
                     PRNT_I("SHR V%X\t\t\t; Result: %X, Flag: %X", nibble2,
                            ctx->V[nibble2], ctx->V[0xF]);
@@ -298,23 +306,28 @@ void exec_instruction(EmulatorCtx* ctx, uint16_t opcode) {
 
                 /* SUBN Vx, Vy */
                 case 7: {
-                    /* Set the carry flag, if needed */
-                    ctx->V[0xF] = ctx->V[nibble3] >= ctx->V[nibble2];
+                    /* Set the (negated) borrow flag, if needed */
+                    const bool borrow = ctx->V[nibble3] >= ctx->V[nibble2];
 
+                    /* Perform the subtraction before setting the borrow flag */
                     ctx->V[nibble2] = ctx->V[nibble3] - ctx->V[nibble2];
+                    ctx->V[0xF]     = borrow;
 
-                    PRNT_I("SUBN V%X, V%X\t\t\t; Result: %X, Flag: %X", nibble2,
+                    PRNT_I("SUBN V%X, V%X\t\t; Result: %X, Flag: %X", nibble2,
                            nibble3, ctx->V[nibble2], ctx->V[0xF]);
                     return;
                 }
 
                 /* SHL Vx {, Vy} */
                 case 0xE: {
-                    /* Store in VF if bit 0 of Vx is set before the operation */
-                    ctx->V[0xF] = ctx->V[nibble2] & 1;
+                    /* VF will store if bit 7 of Vx was set before the
+                     * operation. */
+                    const bool discarded = (ctx->V[nibble2] >> 7) & 1;
 
-                    /* Shift 1 bit to the left, effectively multiplying by 2 */
+                    /* Shift 1 bit to the left, effectively multiplying by 2.
+                     * Make sure the flags are set after the operation. */
                     ctx->V[nibble2] <<= 1;
+                    ctx->V[0xF] = discarded;
 
                     PRNT_I("SHL V%X\t\t\t; Result: %X, Flag: %X", nibble2,
                            ctx->V[nibble2], ctx->V[0xF]);
