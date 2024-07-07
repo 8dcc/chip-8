@@ -149,7 +149,7 @@ void cpu_exec(CpuCtx* ctx, uint16_t opcode) {
                 } break;
 
                 default: {
-                    ERR("Invalid 2nd byte of opcode: %04X", opcode);
+                    die("Invalid opcode: %04X", opcode);
                 } break;
             }
         } break;
@@ -188,10 +188,8 @@ void cpu_exec(CpuCtx* ctx, uint16_t opcode) {
 
         /* SE Vx, Vy */
         case 5: {
-            if (nibble4 != 0) {
-                ERR("Invalid 4th nibble of opcode: %04X", opcode);
-                break;
-            }
+            if (nibble4 != 0)
+                die("Invalid opcode: %04X", opcode);
 
             const bool cmp = ctx->V[nibble2] == ctx->V[nibble3];
             if (cmp)
@@ -316,17 +314,15 @@ void cpu_exec(CpuCtx* ctx, uint16_t opcode) {
                 } break;
 
                 default: {
-                    ERR("Unknown 4th nibble of opcode: %04X", opcode);
+                    die("Invalid opcode: %04X", opcode);
                 } break;
             }
         } break;
 
         /* SNE Vx, Vy */
         case 9: {
-            if (nibble4 != 0) {
-                ERR("Invalid 4th nibble of opcode: %04X", opcode);
-                break;
-            }
+            if (nibble4 != 0)
+                die("Invalid opcode: %04X", opcode);
 
             const bool cmp = ctx->V[nibble2] != ctx->V[nibble3];
             if (cmp)
@@ -373,8 +369,8 @@ void cpu_exec(CpuCtx* ctx, uint16_t opcode) {
         } break;
 
         case 0xE: {
-            const int key   = ctx->V[nibble2];
-            const bool held = kb_is_held(key);
+            const uint8_t key = ctx->V[nibble2] & 0xF;
+            const bool held   = kb_is_held(key);
 
             switch (byte2) {
                 /* SKP Vx */
@@ -382,7 +378,8 @@ void cpu_exec(CpuCtx* ctx, uint16_t opcode) {
                     if (held)
                         ctx->PC += 2;
 
-                    PRNT_I("SKP V%X\t\t\t; Cmp: %X", nibble2, held);
+                    PRNT_I("SKP V%X\t\t\t; Cmp: %X, Key: %X", nibble2, held,
+                           key);
                 } break;
 
                 /* SKNP Vx */
@@ -390,11 +387,12 @@ void cpu_exec(CpuCtx* ctx, uint16_t opcode) {
                     if (!held)
                         ctx->PC += 2;
 
-                    PRNT_I("SKP V%X\t\t\t; Cmp: %X", nibble2, !held);
+                    PRNT_I("SKNP V%X\t\t\t; Cmp: %X, Key: %X", nibble2, !held,
+                           key);
                 } break;
 
                 default: {
-                    ERR("Invalid 2nd byte of opcode: %04X", opcode);
+                    die("Invalid opcode: %04X", opcode);
                 } break;
             }
         } break;
@@ -474,14 +472,14 @@ void cpu_exec(CpuCtx* ctx, uint16_t opcode) {
                 } break;
 
                 default: {
-                    ERR("Invalid 2nd byte of opcode: %04X", opcode);
+                    die("Invalid opcode: %04X", opcode);
                 } break;
             }
         } break;
 
         default: {
             /* If we reached here, this was an invalid instruction */
-            ERR("Invalid or unsupported opcode: %04X", opcode);
+            die("Invalid opcode: %04X", opcode);
         } break;
     }
 }
