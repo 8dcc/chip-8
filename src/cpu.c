@@ -190,8 +190,8 @@ void cpu_exec(CpuCtx* ctx, uint16_t opcode) {
         case 5: {
             if (nibble4 != 0) {
                 ERR("Invalid 4th nibble of opcode: %04X", opcode);
+                break;
             }
-            break;
 
             const bool cmp = ctx->V[nibble2] == ctx->V[nibble3];
             if (cmp)
@@ -325,8 +325,8 @@ void cpu_exec(CpuCtx* ctx, uint16_t opcode) {
         case 9: {
             if (nibble4 != 0) {
                 ERR("Invalid 4th nibble of opcode: %04X", opcode);
+                break;
             }
-            break;
 
             const bool cmp = ctx->V[nibble2] != ctx->V[nibble3];
             if (cmp)

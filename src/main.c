@@ -12,14 +12,8 @@
 #include "include/cpu.h"
 #include "include/keyboard.h"
 
-/*----------------------------------------------------------------------------*/
-/* Globals */
-
 SDL_Window* g_window     = NULL;
 SDL_Renderer* g_renderer = NULL;
-
-/*----------------------------------------------------------------------------*/
-/* Main function */
 
 int main(int argc, char** argv) {
     if (argc < 2)
