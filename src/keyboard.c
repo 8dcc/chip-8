@@ -1,22 +1,29 @@
 
 #include <stdbool.h>
+#include <stdio.h>
 #include "include/keyboard.h"
 
-#define KB_WAITING -1
-
 static bool key_status[16];
-static int last_pressed = KB_WAITING;
 
 void kb_store(int key, bool held) {
     key_status[key] = held;
-    last_pressed    = key;
 }
 
 bool kb_is_held(int key) {
     return key_status[key];
 }
 
-int kb_get_last_pressed(void) {
-    // TODO: Good system for this
-    return last_pressed;
+void kb_print(void) {
+    const bool* k = key_status;
+    printf("+---+---+---+---+\n"
+           "| %d | %d | %d | %d |\n"
+           "+---+---+---+---+\n"
+           "| %d | %d | %d | %d |\n"
+           "+---+---+---+---+\n"
+           "| %d | %d | %d | %d |\n"
+           "+---+---+---+---+\n"
+           "| %d | %d | %d | %d |\n"
+           "+---+---+---+---+\n",
+           k[1], k[2], k[3], k[0xC], k[4], k[5], k[6], k[0xD], k[7], k[8], k[9],
+           k[0xE], k[0xA], k[0], k[0xB], k[0xF]);
 }
