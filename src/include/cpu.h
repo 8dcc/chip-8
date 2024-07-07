@@ -53,8 +53,7 @@ typedef struct CpuCtx {
 /* Initialize a CPU context structure */
 void cpu_init(CpuCtx* ctx);
 
-/* Free the necessary members of an CPU context structure. Doesn't free the
- * context structure itself. */
+/* Free a CPU context structure recursively */
 void cpu_free(CpuCtx* ctx);
 
 /* Load a ROM file into memory, at the current Program Counter (PC) address */

@@ -68,6 +68,7 @@ void cpu_init(CpuCtx* ctx) {
 
 void cpu_free(CpuCtx* ctx) {
     free(ctx->mem);
+    free(ctx);
 }
 
 void cpu_load_rom(CpuCtx* ctx, const char* rom_filename) {
@@ -410,7 +411,7 @@ void cpu_exec(CpuCtx* ctx, uint16_t opcode) {
                 case 0x0A: {
                     /* TODO: Wait for keypress, save in Vx. Change return
                      * depending on it. */
-                    PRNT_I("LD V%X, K\t\t\t; Not implemented", nibble2);
+                    PRNT_I("LD V%X, K\t\t; Not implemented", nibble2);
                 } break;
 
                 /* LD DT, Vx */

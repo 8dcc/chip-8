@@ -11,6 +11,9 @@ void die(const char* fmt, ...) {
     vfprintf(stderr, fmt, va);
     putc('\n', stderr);
 
+    if (g_cpu_ctx != NULL)
+        cpu_free(g_cpu_ctx);
+
     if (g_window != NULL)
         SDL_DestroyWindow(g_window);
 

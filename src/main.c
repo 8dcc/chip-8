@@ -14,6 +14,7 @@
 
 SDL_Window* g_window     = NULL;
 SDL_Renderer* g_renderer = NULL;
+CpuCtx* g_cpu_ctx        = NULL;
 
 int main(int argc, char** argv) {
     if (argc < 2)
@@ -44,11 +45,11 @@ int main(int argc, char** argv) {
     srand(time(NULL));
 
     /* Initialize the cpu */
-    CpuCtx ctx;
-    cpu_init(&ctx);
+    g_cpu_ctx = malloc(sizeof(CpuCtx));
+    cpu_init(g_cpu_ctx);
 
     /* Load the ROM file to memory */
-    cpu_load_rom(&ctx, rom_filename);
+    cpu_load_rom(g_cpu_ctx, rom_filename);
 
     /* Initialize the display */
     display_clear();
@@ -130,7 +131,7 @@ int main(int argc, char** argv) {
         SDL_RenderClear(g_renderer);
 
         /* Render and CPU frequency is the same, 60Hz */
-        cpu_frame(&ctx);
+        cpu_frame(g_cpu_ctx);
 
         /* Render the virtual display into the SDL window */
         display_render();
@@ -140,7 +141,7 @@ int main(int argc, char** argv) {
         SDL_Delay(1000 / FPS);
     }
 
-    cpu_free(&ctx);
+    cpu_free(g_cpu_ctx);
 
     SDL_DestroyRenderer(g_renderer);
     SDL_DestroyWindow(g_window);
