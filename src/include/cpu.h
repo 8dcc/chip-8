@@ -17,19 +17,15 @@
 /* Height (number of bytes) of each character sprite */
 #define CHAR_SPRITE_H 5
 
-/* Number of instructions that will be ran on each 60Hz frame. In other words,
- * instructions will run at (60*N) Hz. */
-#define INSTRUCTIONS_PER_FRAME 10
+/* Number of cycles that the CPU will emulate on each 60Hz frame. In other
+ * words, each instruction will run at (60*N) Hz. */
+#define CYCLES_PER_FRAME 10
 
 typedef struct CpuCtx {
     /* Memory, array of MEM_SZ bytes */
     uint8_t* mem;
 
-    /*
-     * General purpose registers.
-     * V[0xF] is used for flags, and should not be accessed directly by
-     * programs.
-     */
+    /* General purpose registers. V[0xF] is used for flags. */
     uint8_t V[16];
 
     /* For memory addresses */
@@ -59,9 +55,9 @@ void cpu_free(CpuCtx* ctx);
 /* Load a ROM file into memory, at the current Program Counter (PC) address */
 void cpu_load_rom(CpuCtx* ctx, const char* rom_filename);
 
-/* This function should be called at a rate of 60Hz. It will execute
- * INSTRUCTIONS_PER_FRAME instructions by calling `cpu_cycle', and then
- * decrement the timers if needed. */
+/* This function should be called at a rate of 60Hz. It will run
+ * CYCLES_PER_FRAME cycles by calling `cpu_cycle', and then decrement the timers
+ * if needed. */
 void cpu_frame(CpuCtx* ctx);
 
 /* Increment the Program Counter and execute the next instruction by calling

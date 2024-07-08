@@ -96,7 +96,7 @@ void cpu_load_rom(CpuCtx* ctx, const char* rom_filename) {
 
 void cpu_frame(CpuCtx* ctx) {
     /* Each frame, run N instructions */
-    for (int i = 0; i < INSTRUCTIONS_PER_FRAME; i++)
+    for (int i = 0; i < CYCLES_PER_FRAME; i++)
         cpu_cycle(ctx);
 
     /* Decrement the timers, if needed */
