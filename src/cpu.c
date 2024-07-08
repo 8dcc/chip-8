@@ -113,8 +113,11 @@ void cpu_cycle(CpuCtx* ctx) {
     current_opcode = ctx->mem[ctx->PC] << 8;
     current_opcode |= ctx->mem[ctx->PC + 1];
 
-    /* Increment the Program Counter before executing the instruction itself */
-    ctx->PC += 2;
+    /* First, make sure that the keyboard is not waiting for a key for the
+     * "LD Vx, K" instruction. If it is, do not increment the Program Counter.
+     * Otherwise, increment it before executing the instruction itself */
+    if (kb_get_status() != KB_WAITING)
+        ctx->PC += 2;
 
     /* Parse and execute the instruction */
     cpu_exec(ctx, current_opcode);
@@ -409,9 +412,26 @@ void cpu_exec(CpuCtx* ctx, uint16_t opcode) {
 
                 /* LD Vx, K */
                 case 0x0A: {
-                    /* TODO: Wait for keypress, save in Vx. Change return
-                     * depending on it. */
-                    PRNT_I("LD V%X, K\t\t; Not implemented", nibble2);
+                    const EKeyboardStatus keyboard_status = kb_get_status();
+
+                    /* If the keyboard is not waiting, wait. If the keyboard was
+                     * waiting but has a key for us, retreive it. If it's
+                     * already waiting, don't do anything. */
+                    switch (keyboard_status) {
+                        default:
+                        case KB_NONE: {
+                            kb_wait_for_key();
+                        } break;
+
+                        case KB_HAS_KEY: {
+                            ctx->V[nibble2] = kb_get_last_key() & 0xFF;
+                            PRNT_I("LD V%X, K\t\t; Key: %X", nibble2,
+                                   ctx->V[nibble2]);
+                        } break;
+
+                        case KB_WAITING:
+                            break;
+                    }
                 } break;
 
                 /* LD DT, Vx */
